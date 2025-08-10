@@ -148,35 +148,33 @@ def myBranchBound(C):
             continue
 
         # branch on current agent level (row 0 of A_sub)
-        m = len(A_sub)  # remaining rows/cols
-        # for each column j available now
+        # branch on current agent level (row 0 of A_sub)
+        m = len(A_sub)
         for j in range(m):
             new_g = g + A_sub[0][j]
-            # build child subproblem
             new_A = calcMatrixMinor(A_sub, 0, j)
             new_cols = cols_sub[:j] + cols_sub[j+1:]
             new_path = path + [cols_sub[j]]
 
-            # child lower bound
-            child_lb = new_g + rowMin(new_A)
-            if child_lb >= best_ub:
-                # prune by LB
-                continue
+            # count node as soon as it's constructed (even if pruned)
+            node_count += 1
 
-            # optional UB tightening via greedy feasible completion from here
+            child_lb = new_g + rowMin(new_A)
+
+            # try greedy feasible to tighten UB
             greedy_cost, greedy_cols = SNH_assign(new_A, new_cols)
             child_ub = new_g + greedy_cost
             if child_ub < best_ub:
                 best_ub = child_ub
                 ub_list.append(best_ub)
-                best_path = new_path + greedy_cols  # full feasible assignment
+                best_path = new_path + greedy_cols
 
-            # push child
-            queue.append((child_lb, creation_id, depth + 1, new_g, new_path, new_A, new_cols))
-            creation_id += 1
-            node_count += 1
+            # enqueue only if worth exploring
+            if child_lb < best_ub:
+                queue.append((child_lb, creation_id, depth + 1, new_g, new_path, new_A, new_cols))
+                creation_id += 1
 
-    # build X from best_path
+    # ← OUTSIDE the while queue loop
     X = [[0] * n for _ in range(n)]
     if best_path and len(best_path) == n:
         for i, j in enumerate(best_path):

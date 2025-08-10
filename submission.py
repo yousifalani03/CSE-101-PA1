@@ -187,20 +187,32 @@ def myBranchBound(C):
 #######################################################
 ##############       QUESTION 2 HERE   ################
 #######################################################
-def myDynamicProgramming(n,c, V, W):
-    '''
-    Implement Knapsack Dynamic Programming function under here.
+def myDynamicProgramming(n, c, V, W):
+    """
+    0/1 Knapsack DP
+    Returns:
+      Z: length-n 0/1 vector 
+      DP: (n+1) x (c+1) value table
+    """
+    #build DP table
+    DP = [[0] * (c + 1) for _ in range(n + 1)]
+    for i in range(1, n + 1):
+        wi = W[i - 1]
+        vi = V[i - 1]
+        for cap in range(c + 1):
+            if wi > cap:
+                DP[i][cap] = DP[i - 1][cap]
+            else:
+                without = DP[i - 1][cap]
+                with_it = vi + DP[i - 1][cap - wi]
+                DP[i][cap] = with_it if with_it > without else without
 
-    Input:
-    n: Number of items - int
-    c: Capacity of the Knapsack - int
-    V: List of Values of each item - list[int]
-    W: List of Weights of each item - list[int] 
-
-    return:
-    Z: Optimal choice of items for the given constraints - list[int] 
-    DP: Dynamic Programming table generated while calculation - list[list[int]]
-    
-    '''
-    pass
+    # backtrack to build Z
+    Z = [0] * n
+    cap = c
+    for i in range(n, 0, -1):
+        if DP[i][cap] != DP[i - 1][cap]:
+            Z[i - 1] = 1
+            cap -= W[i - 1]
+    return Z, DP
 
